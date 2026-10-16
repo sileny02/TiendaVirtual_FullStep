@@ -1,0 +1,151 @@
+﻿@model AppTiendaVirtual.Models.Producto
+@{
+    ViewData["Title"] = "Editar Producto";
+}
+
+<div class="container py-4">
+    <h2 class="fw-bold mb-4">Editar Producto</h2>
+
+    <form asp-action="Editar" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <input asp-for="Id" type="hidden" />
+
+        <div class="row">
+            <!-- Columna izquierda -->
+            <div class="col-md-8">
+                <div class="card mb-3">
+                    <div class="card-header fw-bold">Información del producto</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre</label>
+                            <input asp-for="Nombre" class="form-control" />
+                            <span asp-validation-for="Nombre" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Descripción</label>
+                            <textarea asp-for="Descripcion" class="form-control" rows="4"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Precio normal</label>
+                                <input asp-for="Precio" class="form-control" type="number" step="0.01" />
+                                <span asp-validation-for="Precio" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Categoría</label>
+                                <select asp-for="CategoriaId" class="form-select"
+                                        asp-items="@(new SelectList(ViewBag.Categorias, "Id", "Nombre"))">
+                                    <option value="">-- Selecciona --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Imagenes actuales -->
+                <div class="card mb-3">
+                    <div class="card-header fw-bold">Imágenes actuales</div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            @foreach (var img in Model.Imagenes)
+                            {
+                                <div class="position-relative">
+                                    <img src="@img.Url"
+                                         style="width:100px;height:100px;object-fit:cover"
+                                         class="rounded border" />
+                                    <a href="/admin/eliminarimagen/@img.Id"
+                                           class="btn btn-danger btn-sm position-absolute top-0 end-0"
+                                           style="padding:2px 6px"
+                                           onclick="return confirm('¿Eliminar imagen?')">
+                                        <i class="bi bi-x"></i>
+                                    </a>
+                                </div>
+                            }
+                        </div>
+
+                        <label class="form-label">Agregar más imágenes</label>
+                        <input type="file" name="imagenes" class="form-control"
+                               multiple accept="image/*" id="inputImagenes" />
+                        <div id="preview" class="d-flex flex-wrap gap-2 mt-3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna derecha -->
+            <div class="col-md-4">
+                <div class="card mb-3">
+                    <div class="card-header fw-bold">Estado</div>
+                    <div class="card-body">
+                        <div class="form-check form-switch">
+                            <input asp-for="Activo" class="form-check-input" type="checkbox" />
+                            <label class="form-check-label">Producto activo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header fw-bold">Inventario actual</div>
+                    <div class="card-body">
+                        @if (Model.Inventarios.Any())
+                        {
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Talla</th>
+                                        <th>Color</th>
+                                        <th>Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var inv in Model.Inventarios)
+                                    {
+                                        <tr>
+                                            <td>@inv.Talla?.Numero</td>
+                                            <td>@inv.Color?.Nombre</td>
+                                            <td>
+                                                <span class="badge bg-@(inv.Stock == 0 ? "danger" : inv.Stock <= 5 ? "warning" : "success")">
+                                                    @inv.Stock
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <p class="text-muted">Sin inventario registrado.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Guardar cambios
+            </button>
+            <a href="/admin" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('inputImagenes').addEventListener('change', function () {
+            const preview = document.getElementById('preview');
+            preview.innerHTML = '';
+            Array.from(this.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style = 'width:100px;height:100px;object-fit:cover';
+                    img.className = 'rounded border';
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+    </script>
+}

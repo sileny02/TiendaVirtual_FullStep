@@ -1,0 +1,155 @@
+﻿@{
+    ViewData["Title"] = "Inicio";
+}
+
+<!-- Hero -->
+<section style="
+    background: #fff;
+    border-bottom: 2px solid rgba(201,168,76,0.2);
+    padding: 80px 0 70px;
+    position: relative;
+    overflow: hidden;">
+
+    <div style="
+        position: absolute; top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 700px; height: 700px;
+        background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%);
+        pointer-events: none;">
+    </div>
+
+    <div class="container text-center position-relative">
+        <div style="
+            width:130px;height:130px;border-radius:50%;
+            background: white;
+            border:3px solid #C9A84C;
+            display:flex;align-items:center;justify-content:center;
+            margin:0 auto 24px;
+            box-shadow:0 0 30px rgba(201,168,76,0.25), 0 8px 30px rgba(0,0,0,0.15);">
+            <img src="/images/MiTiendaVirtualLogo.png" alt="FullStep"
+                 style="width:108px;height:108px;object-fit:contain;border-radius:50%;" />
+        </div>
+
+        <h1 style="
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 900;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;">
+            Bienvenido a <span style="color:#C9A84C;">FullStep</span>
+        </h1>
+
+        <p style="
+            font-size: 0.8rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #aaa;
+            margin-bottom: 16px;">
+            Zapatos para cada paso
+        </p>
+
+        <p style="color:#777;font-size:1.05rem;max-width:480px;margin:0 auto 40px;">
+            Encuentra el calzado perfecto para cada ocasión. Calidad, estilo y comodidad en un solo lugar.
+        </p>
+
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a href="/Producto" class="btn btn-primary btn-lg px-5 py-3"
+                   style="border-radius:12px;font-size:1rem;">
+                <i class="bi bi-shop me-2"></i> Ver catálogo
+            </a>
+            <a href="/Producto?categoriaId=1" class="btn btn-outline-primary btn-lg px-5 py-3"
+                   style="border-radius:12px;font-size:1rem;">
+                <i class="bi bi-star me-2"></i> Ver ofertas
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Categorías -->
+<section style="background:#f5f0e8;padding:60px 0;">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-2" style="color:#1a1a1a;">
+            Nuestras categorías
+        </h2>
+        <p class="text-center mb-5" style="color:#888;">
+            Encuentra calzado para toda la familia
+        </p>
+
+        <div class="row g-4 justify-content-center">
+            @foreach (var cat in new[] {
+                new { Nombre = "Dama", Icono = "bi-gender-female", Color = "#C9A84C", BgColor = "rgba(201,168,76,0.1)", Id = 1 },
+                new { Nombre = "Caballero", Icono = "bi-gender-male", Color = "#1a1a1a", BgColor = "rgba(0,0,0,0.06)", Id = 2 },
+                new { Nombre = "Niño", Icono = "bi-emoji-smile", Color = "#166534", BgColor = "rgba(22,101,52,0.08)", Id = 3 }
+            })
+            {
+                <div class="col-md-4 col-sm-6">
+                    <a href="/Producto?categoriaId=@cat.Id" class="text-decoration-none">
+                        <div class="card text-center p-4 h-100"
+                             style="transition:all 0.3s;cursor:pointer;background:#fff;"
+                             onmouseover="this.style.borderColor='@cat.Color';this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 30px rgba(0,0,0,0.1)'"
+                             onmouseout="this.style.borderColor='#e5e0d5';this.style.transform='translateY(0)';this.style.boxShadow='0 2px 12px rgba(0,0,0,0.06)'">
+                            <div style="
+                                width:70px;height:70px;border-radius:50%;
+                                background:@cat.BgColor;
+                                border:2px solid @cat.Color;
+                                display:flex;align-items:center;justify-content:center;
+                                margin:0 auto 16px;">
+                                <i class="bi @cat.Icono" style="font-size:1.8rem;color:@cat.Color"></i>
+                            </div>
+                            <h5 class="fw-bold" style="color:#1a1a1a;">@cat.Nombre</h5>
+                            <p style="color:#888;font-size:0.85rem;margin:0">Ver colección →</p>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Por qué elegirnos -->
+<section style="background:#1a1a1a;padding:70px 0;">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-2" style="color:#C9A84C;">
+            ¿Por qué elegirnos?
+        </h2>
+        <p class="text-center mb-5" style="color:#666;">
+            Lo que nos hace diferentes
+        </p>
+        <div class="row g-4 text-center">
+            @foreach (var item in new[] {
+                new { Icono = "bi-whatsapp", Titulo = "Compra fácil", Desc = "Realiza tu pedido directo por WhatsApp sin complicaciones.", Color = "#4ade80", Bg = "rgba(74,222,128,0.1)" },
+                new { Icono = "bi-tags-fill", Titulo = "Mejores precios", Desc = "Ofertas y promociones exclusivas en toda nuestra colección.", Color = "#C9A84C", Bg = "rgba(201,168,76,0.1)" },
+                new { Icono = "bi-box-seam", Titulo = "Stock garantizado", Desc = "Verificamos disponibilidad en tiempo real antes de tu pedido.", Color = "#60a5fa", Bg = "rgba(96,165,250,0.1)" }
+            })
+            {
+                <div class="col-md-4">
+                    <div style="
+                        width:70px;height:70px;border-radius:50%;
+                        background:@item.Bg;
+                        border:2px solid @item.Color;
+                        display:flex;align-items:center;justify-content:center;
+                        margin:0 auto 16px;">
+                        <i class="bi @item.Icono" style="font-size:1.6rem;color:@item.Color"></i>
+                    </div>
+                    <h5 class="fw-bold" style="color:#fff;">@item.Titulo</h5>
+                    <p style="color:#888;font-size:0.9rem;">@item.Desc</p>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- CTA Final -->
+<section style="background:#fff;padding:70px 0;">
+    <div class="container text-center">
+        <h3 class="fw-bold mb-3" style="color:#1a1a1a;">
+            ¿Listo para encontrar tu calzado ideal?
+        </h3>
+        <p style="color:#888;margin-bottom:32px;font-size:1.05rem;">
+            Explora nuestra colección completa y encuentra el par perfecto.
+        </p>
+        <a href="/Producto" class="btn btn-primary btn-lg px-5 py-3" style="border-radius:12px;">
+            <i class="bi bi-arrow-right-circle me-2"></i> Explorar ahora
+        </a>
+    </div>
+</section>

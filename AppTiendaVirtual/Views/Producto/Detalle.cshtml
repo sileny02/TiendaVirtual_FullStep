@@ -1,0 +1,230 @@
+﻿@model AppTiendaVirtual.Models.Producto
+@{
+    ViewData["Title"] = Model.Nombre;
+    var promo = Model.Promociones.FirstOrDefault(p => p.Activa);
+    var precioFinal = promo?.PrecioOferta ?? Model.Precio;
+    var tallas = Model.Inventarios
+        .Where(i => i.Stock > 0)
+        .Select(i => i.Talla)
+        .DistinctBy(t => t!.Id)
+        .ToList();
+    var colores = Model.Inventarios
+        .Where(i => i.Stock > 0)
+        .Select(i => i.Color)
+        .DistinctBy(c => c!.Id)
+        .ToList();
+    var stockTotal = Model.Inventarios.Sum(i => i.Stock);
+    var badgeColor = stockTotal == 0 ? "danger" : stockTotal <= 5 ? "warning" : "success";
+    var estadoStock = stockTotal == 0 ? "Agotado" : stockTotal <= 5 ? "Stock bajo" : "Disponible";
+}
+
+<div class="container py-4">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="/" style="color:#C9A84C;text-decoration:none;">Inicio</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="/Producto" style="color:#C9A84C;text-decoration:none;">Catálogo</a>
+            </li>
+            <li class="breadcrumb-item active" style="color:#888;">@Model.Nombre</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+
+        <!-- Galería -->
+        <div class="col-md-6">
+            @if (Model.Imagenes.Any())
+            {
+                <img id="imagenPrincipal"
+                     src="@Model.Imagenes.First().Url"
+                     class="img-fluid rounded mb-3"
+                     style="width:100%;height:420px;object-fit:cover;
+                border-radius:16px;border:2px solid #e5e0d5;
+                box-shadow:0 4px 20px rgba(0,0,0,0.1)" />
+
+                <div class="d-flex gap-2 flex-wrap">
+                    @foreach (var img in Model.Imagenes)
+                    {
+                        <img src="@img.Url"
+                             style="width:72px;height:72px;object-fit:cover;cursor:pointer;
+                        border-radius:10px;border:2px solid #e5e0d5;
+                        transition:all 0.2s;"
+                             onmouseover="this.style.borderColor='#C9A84C'"
+                             onmouseout="this.style.borderColor='#e5e0d5'"
+                             onclick="document.getElementById('imagenPrincipal').src='@img.Url'" />
+                    }
+                </div>
+            }
+            else
+            {
+                <img src="/images/no-image.png" class="img-fluid rounded"
+                     style="border-radius:16px;border:2px solid #e5e0d5" />
+            }
+        </div>
+
+        <!-- Info -->
+        <div class="col-md-6">
+            <div style="background:#fff;border-radius:16px;border:1px solid #e5e0d5;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+
+                <p style="color:#C9A84C;font-size:0.8rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
+                    @Model.Categoria?.Nombre
+                </p>
+
+                <h2 id="nombreProducto" class="fw-bold mb-3" style="color:#1a1a1a;">
+                    @Model.Nombre
+                </h2>
+
+                <!-- Precio -->
+                @if (promo != null)
+                {
+                    <div class="mb-3">
+                        <span class="badge bg-danger mb-2">OFERTA</span>
+                        <div>
+                            <span class="text-decoration-line-through fs-5" style="color:#aaa;">
+                                $@Model.Precio.ToString("N2")
+                            </span>
+                            <span id="precioProducto" class="fw-bold fs-2 ms-2" style="color:#dc2626;">
+                                $@promo.PrecioOferta.ToString("N2")
+                            </span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <p id="precioProducto" class="fw-bold fs-2 mb-3" style="color:#1a1a1a;">
+                        $@Model.Precio.ToString("N2")
+                    </p>
+                }
+
+                <p style="color:#666;font-size:0.95rem;line-height:1.6;margin-bottom:20px;">
+                    @Model.Descripcion
+                </p>
+
+                <hr style="border-color:#e5e0d5;" />
+
+                <!-- Talla -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Talla</label>
+                    <select id="tallaSelect" class="form-select">
+                        <option value="">-- Selecciona una talla --</option>
+                        @foreach (var t in tallas)
+                        {
+                            <option value="@t!.Numero">@t.Numero</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Color -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Color</label>
+                    <select id="colorSelect" class="form-select">
+                        <option value="">-- Selecciona un color --</option>
+                        @foreach (var c in colores)
+                        {
+                            <option value="@c!.Nombre">@c.Nombre</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Stock -->
+                <div class="mb-4">
+                    <span class="badge bg-@badgeColor fs-6">
+                        <i class="bi bi-box-seam"></i> @estadoStock
+                    </span>
+                </div>
+
+                <hr style="border-color:#e5e0d5;" />
+
+                <!-- Botones -->
+                @if (stockTotal > 0)
+                {
+                    <div class="d-grid gap-2">
+                        <button onclick="comprarWhatsApp()"
+                                class="btn btn-success btn-lg">
+                            <i class="bi bi-whatsapp me-2"></i> Comprar por WhatsApp
+                        </button>
+
+                        <form asp-controller="Carrito" asp-action="Agregar" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="productoId" value="@Model.Id" />
+                            <input type="hidden" name="cantidad" value="1" />
+                            <input type="hidden" id="tallaIdInput" name="tallaId" value="" />
+                            <input type="hidden" id="colorIdInput" name="colorId" value="" />
+                            <button type="submit" onclick="return validarSeleccion(this.form)"
+                                    class="btn btn-outline-primary btn-lg w-100">
+                                <i class="bi bi-cart-plus me-2"></i> Agregar al carrito
+                            </button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <button class="btn btn-secondary btn-lg w-100" disabled>
+                        Producto agotado
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const WHATSAPP_NUMERO = '573001234567';
+
+        const inventario = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                    Model.Inventarios.Select(i => new
+                    {
+                            tallaId = i.TallaId,
+                            colorId = i.ColorId,
+                            tallaNombre = i.Talla!.Numero,
+                            colorNombre = i.Color!.Nombre,
+                            stock = i.Stock
+                    })
+            ));
+
+        function comprarWhatsApp() {
+            const talla = document.getElementById('tallaSelect').value;
+            const color = document.getElementById('colorSelect').value;
+            const nombre = document.getElementById('nombreProducto').textContent.trim();
+            const precio = document.getElementById('precioProducto').textContent.trim();
+
+            if (!talla || !color) {
+                mostrarAviso('Selección incompleta', 'Por favor selecciona talla y color antes de continuar.', '👟');
+                return;
+            }
+
+            const mensaje = `Hola, estoy interesado en:\n*${nombre}*\nColor: ${color}\nTalla: ${talla}\nPrecio: ${precio}\n¿Está disponible?`;
+            const url = `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(mensaje)}`;
+            window.open(url, '_blank');
+        }
+
+        function validarSeleccion(form) {
+            const tallaSelect = document.getElementById('tallaSelect');
+            const colorSelect = document.getElementById('colorSelect');
+
+            if (!tallaSelect.value || !colorSelect.value) {
+                mostrarAviso('Selección incompleta', 'Por favor selecciona talla y color antes de continuar.', '👟');
+                return false;
+            }
+
+            const item = inventario.find(i =>
+                i.tallaNombre === tallaSelect.value &&
+                i.colorNombre === colorSelect.value
+            );
+
+            if (!item || item.stock === 0) {
+                mostrarAviso('No disponible', 'Esta combinación de talla y color no está disponible.', '😕');
+                return false;
+            }
+
+            document.getElementById('tallaIdInput').value = item.tallaId;
+            document.getElementById('colorIdInput').value = item.colorId;
+            return true;
+        }
+    </script>
+}

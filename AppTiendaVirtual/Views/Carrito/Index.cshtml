@@ -1,0 +1,176 @@
+﻿@model List<AppTiendaVirtual.Models.CarritoItem>
+@{
+    ViewData["Title"] = "Mi Carrito";
+}
+
+<div class="container py-4">
+    <h2 class="fw-bold mb-4" style="color:#1a1a1a;">
+        <i class="bi bi-cart3" style="color:#C9A84C"></i> Mi Carrito
+    </h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+    @if (TempData["Exito"] != null)
+    {
+        <div class="alert alert-success">@TempData["Exito"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <div style="
+                width:100px;height:100px;border-radius:50%;
+                background:rgba(201,168,76,0.1);
+                border:2px solid rgba(201,168,76,0.3);
+                display:flex;align-items:center;justify-content:center;
+                margin:0 auto 20px;">
+                <i class="bi bi-cart-x" style="font-size:2.5rem;color:#C9A84C"></i>
+            </div>
+            <h4 class="mt-2 fw-bold" style="color:#1a1a1a;">Tu carrito está vacío</h4>
+            <p style="color:#888;">Agrega productos desde el catálogo</p>
+            <a href="/Producto" class="btn btn-primary mt-2 px-4">
+                <i class="bi bi-shop me-2"></i> Ver productos
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+
+            <!-- Lista de items -->
+            <div class="col-md-8">
+                @foreach (var item in Model)
+                {
+                    <div class="card mb-3"
+                         style="border:1px solid #e5e0d5;border-radius:14px;background:#fff;">
+                        <div class="card-body py-3">
+                            <div class="row align-items-center">
+                                <div class="col-3 col-md-2">
+                                    <img src="@item.ImagenUrl"
+                                         style="width:75px;height:75px;object-fit:cover;
+                                    border-radius:10px;border:1px solid #e5e0d5" />
+                                </div>
+                                <div class="col-6 col-md-7">
+                                    <h6 class="fw-bold mb-1" style="color:#1a1a1a;">
+                                        @item.NombreProducto
+                                    </h6>
+                                    <p style="color:#888;font-size:0.82rem;margin-bottom:2px;">
+                                        Talla: <strong>@item.NombreTalla</strong>
+                                        &nbsp;·&nbsp;
+                                        Color: <strong>@item.NombreColor</strong>
+                                    </p>
+                                    <p style="color:#888;font-size:0.82rem;margin:0;">
+                                        Cantidad: <strong>@(item.Cantidad)</strong>
+                                    </p>
+                                </div>
+                                <div class="col-3 col-md-3 text-end">
+                                    <p class="fw-bold mb-2" style="color:#C9A84C;font-size:1.1rem;">
+                                        $@item.Subtotal.ToString("N2")
+                                    </p>
+                                    <form asp-controller="Carrito" asp-action="Eliminar" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                        <input type="hidden" name="tallaId" value="@item.TallaId" />
+                                        <input type="hidden" name="colorId" value="@item.ColorId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('¿Eliminar este producto?')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <div class="d-flex justify-content-between mt-2">
+                    <a href="/Producto" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Seguir comprando
+                    </a>
+                    <a href="/Carrito/Vaciar" class="btn btn-outline-danger"
+                           onclick="return confirm('¿Vaciar el carrito?')">
+                        <i class="bi bi-trash"></i> Vaciar carrito
+                    </a>
+                </div>
+            </div>
+
+            <!-- Resumen -->
+            <div class="col-md-4">
+                <div class="card" style="border:1px solid #e5e0d5;border-radius:16px;overflow:hidden;">
+                    <div class="card-header fw-bold" style="background:#1a1a1a;color:#C9A84C;padding:16px 20px;">
+                        <i class="bi bi-receipt me-2"></i> Resumen del pedido
+                    </div>
+                    <div class="card-body" style="background:#fff;padding:20px;">
+                        @foreach (var item in Model)
+                        {
+                            <div class="d-flex justify-content-between mb-2"
+                                 style="font-size:0.82rem;color:#555;">
+                                <span>
+                                    @item.NombreProducto
+                                    <span style="color:#aaa;">(@item.NombreTalla / @item.NombreColor)</span>
+                                    x@(item.Cantidad)
+                                </span>
+                                <span style="color:#1a1a1a;font-weight:600;">
+                                    $@item.Subtotal.ToString("N2")
+                                </span>
+                            </div>
+                        }
+                        <hr style="border-color:#e5e0d5;" />
+                        <div class="d-flex justify-content-between fw-bold fs-5">
+                            <span style="color:#1a1a1a;">Total</span>
+                            <span style="color:#C9A84C;">
+                                $@Model.Sum(i => i.Subtotal).ToString("N2")
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-footer" style="background:#f5f0e8;border-top:1px solid #e5e0d5;padding:16px;">
+                        <button onclick="comprarCarritoWhatsApp()"
+                                class="btn btn-success w-100 btn-lg">
+                            <i class="bi bi-whatsapp me-2"></i> Pedir por WhatsApp
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    }
+</div>
+
+@{
+    var itemsJson = System.Text.Json.JsonSerializer.Serialize(
+        Model.Select(i => new
+        {
+            nombre = i.NombreProducto,
+            talla = i.NombreTalla,
+            color = i.NombreColor,
+            cantidad = i.Cantidad,
+            precio = i.Subtotal.ToString("N2")
+        })
+    );
+    var totalJson = Model.Sum(i => i.Subtotal).ToString("N2");
+}
+
+@section Scripts {
+    <script>
+        const WHATSAPP_NUMERO = '573126539335';
+        const items = JSON.parse('@Html.Raw(itemsJson.Replace("'", "\\'"))');
+        const total = '@totalJson';
+
+        function comprarCarritoWhatsApp() {
+            if (!items || items.length === 0) {
+                mostrarAviso('Carrito vacío', 'Agrega productos antes de continuar.', '🛒');
+                return;
+            }
+
+            let detalle = items.map(i =>
+                '- ' + i.nombre + ' | Talla: ' + i.talla + ' | Color: ' + i.color + ' | x' + i.cantidad + ' | $' + i.precio
+            ).join('\n');
+
+            var mensaje = 'Hola, quiero hacer el siguiente pedido:\n\n' + detalle + '\n\nTotal: $' + total + '\n\n¿Pueden confirmarlo?';
+            var url = 'https://wa.me/' + WHATSAPP_NUMERO + '?text=' + encodeURIComponent(mensaje);
+            window.open(url, '_blank');
+        }
+    </script>
+}

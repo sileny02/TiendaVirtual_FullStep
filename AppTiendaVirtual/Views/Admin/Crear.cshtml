@@ -1,0 +1,230 @@
+﻿@model AppTiendaVirtual.Models.Producto
+@{
+    ViewData["Title"] = "Crear Producto";
+    var tallasJson = System.Text.Json.JsonSerializer.Serialize(
+        (ViewBag.Tallas as IEnumerable<AppTiendaVirtual.Models.Talla>)
+        ?.Select(t => new { id = t.Id, numero = t.Numero })
+        ?? Enumerable.Empty<object>()
+    );
+    var coloresJson = System.Text.Json.JsonSerializer.Serialize(
+        (ViewBag.Colores as IEnumerable<AppTiendaVirtual.Models.Color>)
+        ?.Select(c => new { id = c.Id, nombre = c.Nombre, hex = c.HexCodigo })
+        ?? Enumerable.Empty<object>()
+    );
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Nuevo Producto</h2>
+        <a href="/admin" class="btn btn-outline-secondary">
+            echo AppTiendaVirtual/appsettings.json >> .gitignore
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <form asp-action="Crear" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+
+        <div class="row g-4">
+            <div class="col-md-8">
+
+                <div class="card mb-4">
+                    <div class="card-header fw-bold">
+                        <i class="bi bi-info-circle"></i> Información del producto
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre</label>
+                            <input asp-for="Nombre" class="form-control" placeholder="Ej: Zapato deportivo running" />
+                            <span asp-validation-for="Nombre" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Descripción</label>
+                            <textarea asp-for="Descripcion" class="form-control" rows="3"
+                                      placeholder="Describe el producto..."></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Precio</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input asp-for="Precio" class="form-control" type="number"
+                                           step="0.01" min="0" placeholder="0.00" />
+                                </div>
+                                <span asp-validation-for="Precio" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Categoría</label>
+                                <select asp-for="CategoriaId" class="form-select"
+                                        asp-items="@(new SelectList(ViewBag.Categorias, "Id", "Nombre"))">
+                                    <option value="">-- Selecciona --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-box-seam"></i> Inventario inicial</span>
+                        <button type="button" class="btn btn-sm btn-primary" onclick="agregarFila()">
+                            <i class="bi bi-plus-lg"></i> Agregar combinación
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="ps-3">Talla</th>
+                                    <th>Color</th>
+                                    <th>Stock</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="bodyInventario"></tbody>
+                        </table>
+                        <div id="sinFilas" class="text-center py-4" style="color:#555;">
+                            <i class="bi bi-box" style="font-size:2rem"></i>
+                            <p class="mt-2 mb-0 small">Haz clic en "Agregar combinación" para añadir tallas y colores</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header fw-bold">
+                        <i class="bi bi-images"></i> Imágenes del producto
+                    </div>
+                    <div class="card-body">
+                        <input type="file" name="imagenes" class="form-control"
+                               multiple accept="image/*" id="inputImagenes" />
+                        <small class="text-muted">Puedes subir varias imágenes. La primera será la principal.</small>
+                        <div id="preview" class="d-flex flex-wrap gap-2 mt-3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header fw-bold">
+                        <i class="bi bi-toggle-on"></i> Estado
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-switch">
+                            <input asp-for="Activo" class="form-check-input" type="checkbox" checked />
+                            <label class="form-check-label">Producto activo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header fw-bold">
+                        <i class="bi bi-lightbulb"></i> Consejos
+                    </div>
+                    <div class="card-body" style="font-size:0.82rem;color:#888;">
+                        <p>• Agrega todas las combinaciones de talla y color disponibles.</p>
+                        <p>• El stock puede editarse después desde el inventario.</p>
+                        <p>• La primera imagen será la que aparezca en el catálogo.</p>
+                        <p class="mb-0">• Puedes activar o desactivar el producto en cualquier momento.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-2">
+            <button type="submit" class="btn btn-primary px-5">
+                <i class="bi bi-save"></i> Guardar producto
+            </button>
+            <a href="/admin" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        const tallas = @Html.Raw(tallasJson);
+        const colores = @Html.Raw(coloresJson);
+        let filaIndex = 0;
+
+        function agregarFila() {
+            document.getElementById('sinFilas').style.display = 'none';
+            const tbody = document.getElementById('bodyInventario');
+            const tr = document.createElement('tr');
+            tr.id = `fila_${filaIndex}`;
+
+            const optionsTallas = tallas.map(t =>
+                `<option value="${t.id}">${t.numero}</option>`
+            ).join('');
+
+            const optionsColores = colores.map(c =>
+                `<option value="${c.id}">${c.nombre}</option>`
+            ).join('');
+
+            const idx = filaIndex;
+            tr.innerHTML = `
+                <td class="ps-3">
+                    <select name="tallaIds" class="form-select form-select-sm" style="min-width:90px">
+                        <option value="">-- Talla --</option>
+                        ${optionsTallas}
+                    </select>
+                </td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <div id="circulo_${idx}"
+                             style="width:22px;height:22px;border-radius:50%;background:#333;
+                                    border:1px solid #555;flex-shrink:0"></div>
+                        <select name="colorIds" class="form-select form-select-sm" style="min-width:120px"
+                                onchange="actualizarCirculo(this, ${idx})">
+                            <option value="">-- Color --</option>
+                            ${optionsColores}
+                        </select>
+                    </div>
+                </td>
+                <td>
+                    <input type="number" name="stocks" class="form-control form-control-sm"
+                           min="0" value="1" style="width:75px" />
+                </td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-outline-danger"
+                            onclick="eliminarFila('fila_${idx}')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+
+            tbody.appendChild(tr);
+            filaIndex++;
+        }
+
+        function actualizarCirculo(select, index) {
+            const found = colores.find(c => c.id == select.value);
+            const circulo = document.getElementById(`circulo_${index}`);
+            if (circulo && found) {
+                circulo.style.background = found.hex;
+                circulo.style.border = `2px solid ${found.hex}`;
+            }
+        }
+
+        function eliminarFila(id) {
+            document.getElementById(id)?.remove();
+            if (document.getElementById('bodyInventario').children.length === 0) {
+                document.getElementById('sinFilas').style.display = 'block';
+            }
+        }
+
+        document.getElementById('inputImagenes').addEventListener('change', function () {
+            const preview = document.getElementById('preview');
+            preview.innerHTML = '';
+            Array.from(this.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style = 'width:100px;height:100px;object-fit:cover;border-radius:8px';
+                    img.className = 'border';
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+    </script>
+}

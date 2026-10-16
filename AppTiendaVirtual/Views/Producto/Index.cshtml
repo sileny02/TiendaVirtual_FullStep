@@ -1,0 +1,203 @@
+﻿@model List<AppTiendaVirtual.Models.Producto>
+@{
+    ViewData["Title"] = "Catálogo de Productos";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+
+        <!-- Sidebar filtros -->
+        <div class="col-md-3">
+            <div class="card mb-3">
+                <div class="card-header fw-bold">
+                    <i class="bi bi-funnel"></i> Filtros
+                </div>
+                <div class="card-body">
+                    <form method="get" asp-action="Index">
+
+                        <!-- Buscador -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Buscar</label>
+                            <div class="input-group">
+                                <input type="text" name="buscar" class="form-control"
+                                       placeholder="Nombre del producto..."
+                                       value="@ViewBag.Buscar" />
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <hr style="border-color:#e0d8c8;" />
+
+                        <!-- Categorias -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Categoría</label>
+                            @foreach (var cat in ViewBag.Categorias as IEnumerable<dynamic> ?? new List<dynamic>())
+                            {
+                                var estaSeleccionada = ViewBag.CategoriaSeleccionada == cat.Id;
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio"
+                                           name="categoriaId" value="@cat.Id"
+                                           checked="@estaSeleccionada" />
+                                    <label class="form-check-label" style="color:#444">@cat.Nombre</label>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Talla -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Talla</label>
+                            <select name="tallaId" class="form-select form-select-sm">
+                                <option value="">Todas</option>
+                                @foreach (var t in ViewBag.Tallas as IEnumerable<dynamic> ?? new List<dynamic>())
+                                {
+                                    var tallaSeleccionada = ViewBag.TallaSeleccionada == t.Id;
+                                    <option value="@t.Id" selected="@tallaSeleccionada">@t.Numero</option>
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Color -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Color</label>
+                            <select name="colorId" class="form-select form-select-sm">
+                                <option value="">Todos</option>
+                                @foreach (var c in ViewBag.Colores as IEnumerable<dynamic> ?? new List<dynamic>())
+                                {
+                                    var colorSeleccionado = ViewBag.ColorSeleccionado == c.Id;
+                                    <option value="@c.Id" selected="@colorSeleccionado">@c.Nombre</option>
+                                }
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Filtrar
+                        </button>
+                        <a href="/Producto" class="btn btn-outline-secondary w-100 mt-2">
+                            <i class="bi bi-x-circle"></i> Limpiar
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid de productos -->
+        <div class="col-md-9">
+            <h4 class="fw-bold mb-3" style="color:#1a1a1a;">
+                @ViewBag.TotalProductos producto(s) encontrado(s)
+                @if (!string.IsNullOrEmpty(ViewBag.Buscar as string))
+                {
+                    <span style="color:#C9A84C;font-size:0.9rem;">
+                        — búsqueda: "@ViewBag.Buscar"
+                    </span>
+                }
+            </h4>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info">
+                    No hay productos disponibles con esos filtros.
+                </div>
+            }
+
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                @foreach (var p in Model)
+                {
+                    var promo = p.Promociones.FirstOrDefault(pr => pr.Activa);
+                    var stockTotal = p.Inventarios.Sum(i => i.Stock);
+
+                    <div class="col">
+                        <div class="card h-100 position-relative"
+                             style="transition:all 0.3s;"
+                             onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 30px rgba(0,0,0,0.12)'"
+                             onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 12px rgba(0,0,0,0.06)'">
+
+                            <a href="/Producto/Detalle/@p.Id">
+                                <img src="@(p.Imagenes.FirstOrDefault()?.Url ?? "/images/no-image.png")"
+                                     class="card-img-top"
+                                     style="height:220px;object-fit:cover;border-radius:14px 14px 0 0" />
+                            </a>
+
+                            @if (promo != null)
+                            {
+                                <span class="badge bg-danger position-absolute top-0 start-0 m-2">
+                                    OFERTA
+                                </span>
+                            }
+                            @if (stockTotal == 0)
+                            {
+                                <span class="badge bg-secondary position-absolute top-0 end-0 m-2">
+                                    Agotado
+                                </span>
+                            }
+
+                            <div class="card-body">
+                                <h6 class="card-title fw-bold" style="color:#1a1a1a;">@p.Nombre</h6>
+                                <p style="color:#888;font-size:0.85rem;margin-bottom:8px;">
+                                    @p.Categoria?.Nombre
+                                </p>
+
+                                @if (promo != null)
+                                {
+                                    <p class="mb-1">
+                                        <span class="text-decoration-line-through" style="color:#aaa;">
+                                            $@p.Precio.ToString("N2")
+                                        </span>
+                                        <span class="fw-bold ms-2" style="color:#dc2626;">
+                                            $@promo.PrecioOferta.ToString("N2")
+                                        </span>
+                                    </p>
+                                }
+                                else
+                                {
+                                    <p class="fw-bold" style="color:#1a1a1a;">
+                                        $@p.Precio.ToString("N2")
+                                    </p>
+                                }
+                            </div>
+
+                            <div class="card-footer" style="background:#fff;border-top:1px solid #f0ebe0;">
+                                <a href="/Producto/Detalle/@p.Id"
+                                       class="btn btn-outline-primary w-100">
+                                    <i class="bi bi-eye"></i> Ver detalle
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Paginacion -->
+            @if (ViewBag.TotalPaginas > 1)
+            {
+                <div class="d-flex justify-content-center mt-4">
+                    <nav>
+                        <ul class="pagination">
+                            <li class="page-item @(ViewBag.PaginaActual == 1 ? "disabled" : "")">
+                                <a class="page-link"
+                                       href="?pagina=@(ViewBag.PaginaActual - 1)&categoriaId=@ViewBag.CategoriaSeleccionada&colorId=@ViewBag.ColorSeleccionado&tallaId=@ViewBag.TallaSeleccionada&buscar=@ViewBag.Buscar">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                            @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+                            {
+                                <li class="page-item @(ViewBag.PaginaActual == i ? "active" : "")">
+                                    <a class="page-link"
+                                           href="?pagina=@i&categoriaId=@ViewBag.CategoriaSeleccionada&colorId=@ViewBag.ColorSeleccionado&tallaId=@ViewBag.TallaSeleccionada&buscar=@ViewBag.Buscar">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+                            <li class="page-item @(ViewBag.PaginaActual == ViewBag.TotalPaginas ? "disabled" : "")">
+                                <a class="page-link"
+                                       href="?pagina=@(ViewBag.PaginaActual + 1)&categoriaId=@ViewBag.CategoriaSeleccionada&colorId=@ViewBag.ColorSeleccionado&tallaId=@ViewBag.TallaSeleccionada&buscar=@ViewBag.Buscar">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            }
+        </div>
+    </div>
+</div>

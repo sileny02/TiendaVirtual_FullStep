@@ -1,0 +1,222 @@
+﻿@{
+    ViewData["Title"] = "Reportes";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">
+            <i class="bi bi-bar-chart-fill" style="color:#D4AF37"></i> Reportes
+        </h2>
+        <a href="/admin" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <!-- Tarjetas resumen -->
+    <div class="row g-3 mb-5">
+        <div class="col-6 col-md-3">
+            <div class="card text-center p-3">
+                <div style="font-size:2rem;color:#D4AF37">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <div class="fw-bold fs-3">@ViewBag.TotalProductos</div>
+                <div class="small" style="color:#888">Productos activos</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card text-center p-3">
+                <div style="font-size:2rem;color:#4ade80">
+                    <i class="bi bi-tags-fill"></i>
+                </div>
+                <div class="fw-bold fs-3">@ViewBag.TotalEnOferta</div>
+                <div class="small" style="color:#888">En oferta</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card text-center p-3">
+                <div style="font-size:2rem;color:#f87171">
+                    <i class="bi bi-x-circle-fill"></i>
+                </div>
+                <div class="fw-bold fs-3">@ViewBag.TotalAgotados</div>
+                <div class="small" style="color:#888">Agotados</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card text-center p-3">
+                <div style="font-size:2rem;color:#60a5fa">
+                    <i class="bi bi-stack"></i>
+                </div>
+                <div class="fw-bold fs-3">@ViewBag.StockTotal</div>
+                <div class="small" style="color:#888">Unidades en stock</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Productos agotados -->
+    <div class="card mb-4">
+        <div class="card-header fw-bold d-flex align-items-center gap-2">
+            <span class="badge bg-danger">!</span>
+            Productos agotados (@((ViewBag.Agotados as List<AppTiendaVirtual.Models.Producto>)?.Count ?? 0))
+        </div>
+        <div class="card-body p-0">
+            @{
+                var agotados = ViewBag.Agotados as List<AppTiendaVirtual.Models.Producto>;
+            }
+            @if (agotados == null || !agotados.Any())
+            {
+                <p class="text-muted p-3 mb-0">No hay productos agotados. ✅</p>
+            }
+            else
+            {
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">Imagen</th>
+                            <th>Producto</th>
+                            <th>Stock</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in agotados)
+                        {
+                            <tr>
+                                <td class="ps-3">
+                                    <img src="@(p.Imagenes.FirstOrDefault()?.Url ?? "/images/no-image.png")"
+                                         style="width:40px;height:40px;object-fit:cover;border-radius:6px" />
+                                </td>
+                                <td>@p.Nombre</td>
+                                <td>
+                                    <span class="badge bg-danger">Agotado</span>
+                                </td>
+                                <td>
+                                    <a href="/admin/inventario/@p.Id"
+                                           class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-plus-lg"></i> Agregar stock
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+    <!-- Stock bajo -->
+    <div class="card mb-4">
+        <div class="card-header fw-bold d-flex align-items-center gap-2">
+            <span class="badge bg-warning text-dark">⚠</span>
+            Productos con stock bajo (top 10)
+        </div>
+        <div class="card-body p-0">
+            @{
+                var stockBajo = ViewBag.StockBajo as List<AppTiendaVirtual.Models.Producto>;
+            }
+            @if (stockBajo == null || !stockBajo.Any())
+            {
+                <p class="text-muted p-3 mb-0">No hay productos con stock bajo. ✅</p>
+            }
+            else
+            {
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">Imagen</th>
+                            <th>Producto</th>
+                            <th>Stock total</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in stockBajo)
+                        {
+                            var total = p.Inventarios.Sum(i => i.Stock);
+                            var badge = total == 0 ? "danger" : total <= 5 ? "warning" : "success";
+                            var estado = total == 0 ? "Agotado" : total <= 5 ? "Bajo" : "Normal";
+                            <tr>
+                                <td class="ps-3">
+                                    <img src="@(p.Imagenes.FirstOrDefault()?.Url ?? "/images/no-image.png")"
+                                         style="width:40px;height:40px;object-fit:cover;border-radius:6px" />
+                                </td>
+                                <td>@p.Nombre</td>
+                                <td>@total unidades</td>
+                                <td>
+                                    <span class="badge bg-@badge">@estado</span>
+                                </td>
+                                <td>
+                                    <a href="/admin/inventario/@p.Id"
+                                           class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-plus-lg"></i> Agregar stock
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+    <!-- Productos en oferta -->
+    <div class="card mb-4">
+        <div class="card-header fw-bold d-flex align-items-center gap-2">
+            <span class="badge" style="background:#D4AF37;color:#000">%</span>
+            Productos en oferta (@((ViewBag.EnOferta as List<AppTiendaVirtual.Models.Producto>)?.Count ?? 0))
+        </div>
+        <div class="card-body p-0">
+            @{
+                var enOferta = ViewBag.EnOferta as List<AppTiendaVirtual.Models.Producto>;
+            }
+            @if (enOferta == null || !enOferta.Any())
+            {
+                <p class="text-muted p-3 mb-0">No hay productos en oferta actualmente.</p>
+            }
+            else
+            {
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">Imagen</th>
+                            <th>Producto</th>
+                            <th>Precio normal</th>
+                            <th>Precio oferta</th>
+                            <th>Descuento</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in enOferta)
+                        {
+                            var promo = p.Promociones.First(pr => pr.Activa);
+                            var descuento = Math.Round((1 - promo.PrecioOferta / p.Precio) * 100, 0);
+                            <tr>
+                                <td class="ps-3">
+                                    <img src="@(p.Imagenes.FirstOrDefault()?.Url ?? "/images/no-image.png")"
+                                         style="width:40px;height:40px;object-fit:cover;border-radius:6px" />
+                                </td>
+                                <td>@p.Nombre</td>
+                                <td class="text-decoration-line-through" style="color:#888">
+                                    $@p.Precio.ToString("N2")
+                                </td>
+                                <td style="color:#D4AF37;font-weight:700">
+                                    $@promo.PrecioOferta.ToString("N2")
+                                </td>
+                                <td>
+                                    <span class="badge bg-danger">-@descuento%</span>
+                                </td>
+                                <td>
+                                    <a href="/admin/promociones"
+                                           class="btn btn-sm btn-outline-warning">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>

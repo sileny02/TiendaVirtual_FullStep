@@ -1,0 +1,145 @@
+﻿@model List<AppTiendaVirtual.Models.Producto>
+@{
+    ViewData["Title"] = "Gestionar Promociones";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">
+            <i class="bi bi-tags-fill" style="color:#D4AF37"></i> Promociones
+        </h2>
+        <a href="/admin" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    @if (TempData["Exito"] != null)
+    {
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle"></i> @TempData["Exito"]
+        </div>
+    }
+
+    @foreach (var p in Model)
+    {
+        var promoActiva = p.Promociones.FirstOrDefault(pr => pr.Activa);
+
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center gap-3">
+                <img src="@(p.Imagenes.FirstOrDefault()?.Url ?? "/images/no-image.png")"
+                     style="width:48px;height:48px;object-fit:cover;border-radius:8px" />
+                <div>
+                    <div class="fw-bold">@p.Nombre</div>
+                    <div class="small" style="color:#888;">
+                        Precio normal:
+                        <span style="color:#D4AF37">$@p.Precio.ToString("N2")</span>
+                    </div>
+                </div>
+                @if (promoActiva != null)
+                {
+                    <span class="badge ms-auto" style="background:#D4AF37;color:#000">
+                        EN OFERTA — $@promoActiva.PrecioOferta.ToString("N2")
+                    </span>
+                }
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+
+                    <!-- Formulario agregar promocion -->
+                    <div class="col-md-6">
+                        <h6 class="fw-bold mb-3">Nueva promoción</h6>
+                        <form asp-controller="Admin" asp-action="AgregarPromocion" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="productoId" value="@p.Id" />
+
+                            <div class="mb-3">
+                                <label class="form-label">Precio en oferta</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" name="precioOferta"
+                                           class="form-control" step="0.01" min="0"
+                                           placeholder="0.00" required />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Fecha inicio</label>
+                                    <input type="date" name="fechaInicio" class="form-control" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Fecha fin</label>
+                                    <input type="date" name="fechaFin" class="form-control" />
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-tag"></i> Aplicar promoción
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Historial de promociones -->
+                    <div class="col-md-6">
+                        <h6 class="fw-bold mb-3">Historial</h6>
+                        @if (p.Promociones.Any())
+                        {
+                            <table class="table table-sm align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Precio</th>
+                                        <th>Inicio</th>
+                                        <th>Fin</th>
+                                        <th>Estado</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var promo in p.Promociones.OrderByDescending(pr => pr.Id))
+                                    {
+                                        <tr>
+                                            <td style="color:#D4AF37">
+                                                $@promo.PrecioOferta.ToString("N2")
+                                            </td>
+                                            <td class="small">
+                                                @(promo.FechaInicio?.ToString("dd/MM/yy") ?? "—")
+                                            </td>
+                                            <td class="small">
+                                                @(promo.FechaFin?.ToString("dd/MM/yy") ?? "—")
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-@(promo.Activa ? "success" : "secondary")">
+                                                    @(promo.Activa ? "Activa" : "Inactiva")
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex gap-1">
+                                                    @if (promo.Activa)
+                                                    {
+                                                        <a href="/admin/promociones/desactivar/@promo.Id"
+                                                               class="btn btn-sm btn-outline-warning"
+                                                               title="Desactivar">
+                                                            <i class="bi bi-pause"></i>
+                                                        </a>
+                                                    }
+                                                    <a href="/admin/promociones/eliminar/@promo.Id"
+                                                           class="btn btn-sm btn-outline-danger"
+                                                           onclick="return confirm('¿Eliminar esta promoción?')"
+                                                           title="Eliminar">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <p class="text-muted small">Sin promociones registradas.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
